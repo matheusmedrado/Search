@@ -52,7 +52,10 @@ enum Palette {
         static let hover = pair(0.965, 0.15)
         static let frame = pair(0.955, 0.075)
         static let sideWash = veil(0.76, 0.15)
-        static let sideHover = veil(0.36, 0.075)
+        // Hover sits between the resting tile and the live tab: a pin under
+        // the pointer has to differ from the same pin at rest, which these
+        // were once (as plain greys) and, for a while, were not.
+        static let sideHover = veil(0.52, 0.11)
         static let sideTile = veil(0.36, 0.075)
         static let sidePinLive = veil(0.76, 0.15)
         /// The resting traffic lights, drawn by hand when the app is behind.
