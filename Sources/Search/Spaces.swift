@@ -25,6 +25,9 @@ struct Space: Codable, Identifiable, Equatable {
     var colour: Int
     /// Its icon, one of `Spaces.icons`.
     var icon: String?
+    /// Its light in the frame, one of `Theme.all` by id (see Glass.swift);
+    /// nil until one is chosen, and it wears `Theme.standing` till then.
+    var theme: String?
     /// Signed in wherever the first space is — the same cookies and
     /// sign-ins, only the tabs its own — rather than a store of its own.
     /// Chosen when it is made; nil, for a space from before the choice, is
@@ -492,6 +495,12 @@ extension Browser {
         Spaces.write(spaces, profile: profileID)
     }
 
+    func setSpaceTheme(_ id: UUID, to theme: Theme) {
+        guard let at = spaces.firstIndex(where: { $0.id == id }) else { return }
+        spaces[at].theme = theme.id
+        Spaces.write(spaces, profile: profileID)
+    }
+
     func setSpaceDownloads(_ id: UUID, to folder: URL?) {
         guard let at = spaces.firstIndex(where: { $0.id == id }) else { return }
         spaces[at].downloads = folder?.path
@@ -699,6 +708,16 @@ enum SpaceMenu {
         let icon = NSMenuItem(title: "Icon", action: nil, keyEquivalent: "")
         icon.submenu = icons
         menu.addItem(icon)
+        // Its light in the frame (see Glass.swift).
+        let themes = NSMenu()
+        for theme in Theme.all {
+            let choice = item(theme.name, checked: here.light == theme) { browser.setSpaceTheme(here.id, to: theme) }
+            choice.image = theme.swatch
+            themes.addItem(choice)
+        }
+        let theme = NSMenuItem(title: "Theme", action: nil, keyEquivalent: "")
+        theme.submenu = themes
+        menu.addItem(theme)
         // The order is the swipe's, and ⌃1–⌃9's.
         if let at = browser.spaces.firstIndex(where: { $0.id == here.id }) {
             if at > 0 { menu.addItem(item("Move Left") { browser.moveSpace(here.id, to: at - 1) }) }

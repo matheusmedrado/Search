@@ -23,7 +23,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import split_view as sv  # noqa: E402
 
 sv.use("edge-to-edge")
-GAP = 8
+GAP = 10
 PICTURES = sys.argv[1] if len(sys.argv) > 1 else None
 
 

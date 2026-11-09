@@ -480,7 +480,13 @@ struct ContentView: View {
             // that survives the transition is not a white band across the top.
             // With the tabs down the side, the ground the page's card and the
             // column sit on (see CardEdge).
-            (fullscreenTab != nil ? Color.black : cards ? Palette.frame : Palette.ground)
+            if fullscreenTab != nil {
+                Color.black
+            } else if cards {
+                FrameGlass(theme: browser.space.light, onRight: sideOnRight)
+            } else {
+                Palette.ground
+            }
 
             // One stage, always. It starts beside the column and under the
             // strip, not behind them — a page sliding beneath floating chrome
@@ -790,7 +796,9 @@ struct ContentView: View {
         window_
             // The column folded away, and out again at the edge (see Fold.swift).
             .overlay(alignment: sideOnRight ? .trailing : .leading) {
-                if fullscreenTab == nil { Fold(browser: browser, prefs: browser.prefs) }
+                // With the window's width, for the column's piece of the
+                // frame's light (see FrameGlass).
+                if fullscreenTab == nil { Fold(browser: browser, prefs: browser.prefs).environment(\.windowWidth, across) }
             }
             .overlay(alignment: .bottom) { bars }
             .overlay {

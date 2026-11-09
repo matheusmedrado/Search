@@ -172,8 +172,10 @@ final class Preferences: ObservableObject {
         didSet { store.set(showsPlayer, forKey: "sidebar.player") }
     }
     /// One tab's line in the column, and the size its title is set in.
-    var sideRow: CGFloat { iconColumn ? Metrics.iconTile : roomyTabs ? 36 : 28 }
-    var sideTitle: CGFloat { roomyTabs ? 14 : 12.5 }
+    var sideRow: CGFloat { iconColumn ? Metrics.iconTile : roomyTabs ? 40 : 34 }
+    var sideTitle: CGFloat { roomyTabs ? 15 : 13.5 }
+    /// A site's mark at the head of its line.
+    var sideMark: CGFloat { roomyTabs ? 20 : 18 }
     /// How wide the column is. Pulled by its edge, and remembered.
     @Published var sideWidth: CGFloat {
         didSet { store.set(Double(sideWidth), forKey: "sidebar.width") }
@@ -754,7 +756,9 @@ final class Preferences: ObservableObject {
         let width = store.object(forKey: "sidebar.width") as? Double ?? Double(Metrics.side)
         sideWidth = min(Metrics.sideMax, max(Metrics.sideMin, CGFloat(width)))
         cards = store.object(forKey: "layout.cards") as? Bool ?? true
-        glyph = store.string(forKey: "glyph").flatMap(Glyph.init) ?? .letters
+        // A site's own icon unless letters were asked for: the letter is what
+        // a site without one wears (see Mark), not what every site does.
+        glyph = store.string(forKey: "glyph").flatMap(Glyph.init) ?? .icons
         engine = store.string(forKey: "search.engine").flatMap(Engine.init) ?? .standard
         customEngine = store.string(forKey: "search.custom") ?? ""
         shiftEngine = store.string(forKey: "search.shift").flatMap(Engine.init)
@@ -970,7 +974,7 @@ final class Preferences: ObservableObject {
         take(\.sidePanelWidth, "sidepanel.width", (store.object(forKey: "sidepanel.width") as? Double).map { CGFloat($0) }
             .flatMap { Preferences.sidePanelWidths.contains($0) ? $0 : nil }, or: 380)
         take(\.cards, "layout.cards", store.object(forKey: "layout.cards") as? Bool, or: true)
-        take(\.glyph, "glyph", store.string(forKey: "glyph").flatMap(Glyph.init), or: .letters)
+        take(\.glyph, "glyph", store.string(forKey: "glyph").flatMap(Glyph.init), or: .icons)
         take(\.tabsGive, store.bool(forKey: "tabs.give"))
         take(\.showsTabShortcuts, store.bool(forKey: "tabs.shortcuts"))
         take(\.bookmarksBar, store.bool(forKey: "bookmarks.bar"))

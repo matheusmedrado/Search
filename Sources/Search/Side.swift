@@ -51,8 +51,8 @@ struct SideBar: View {
     /// A tab's line: taller with roomier tabs turned on.
     private var rowHeight: CGFloat { prefs.sideRow }
     private static let gap: CGFloat = 2
-    private static let square: CGFloat = 34
-    private static let pinGap: CGFloat = 4
+    private static let square: CGFloat = 44
+    private static let pinGap: CGFloat = 6
 
     private var onRight: Bool { prefs.sidePosition == .right }
     /// Icons only (SideIcons.swift): tiles for rows, a fixed width, the
@@ -149,7 +149,13 @@ struct SideBar: View {
         .onAppear { SpaceSwipe.shared.start(for: browser) }
         .background {
             ZStack {
-                landing ? greys.hover : onFrame ? Palette.frame : Palette.ground
+                // On the frame, its own piece of the glass (see FrameGlass).
+                if onFrame {
+                    FrameGlass(theme: browser.space.light, onRight: onRight, column: prefs.columnWidth)
+                    if landing { greys.hover }
+                } else {
+                    landing ? greys.hover : Palette.ground
+                }
                 if prefs.splitView {
                     SplitDropZone(browser: browser, tab: nil, kind: .strip)
                 }
@@ -856,7 +862,7 @@ struct SideBar: View {
     /// The foot's door and its margin beneath; with icons only, its doors
     /// one above the other.
     private var footHeight: CGFloat {
-        icons ? CGFloat(SideFoot.doors(prefs, browser.fetches, hanging: browser.downloadsHanging)) * 28 + 8 : 26 + 10
+        icons ? CGFloat(SideFoot.doors(prefs, browser.fetches, hanging: browser.downloadsHanging)) * 28 + 8 : SpaceSwitcher.height + 10
     }
     /// Between what plays in another tab and the foot's doors.
     private static let playerGap: CGFloat = 4
@@ -907,7 +913,16 @@ private struct SideFoot: View {
         } else {
             HStack(spacing: 2) {
                 if Profiles.shared.several { ProfileBadge(browser: browser) }
-                if prefs.usesSpaces { SpaceDot(browser: browser) }
+                if prefs.usesSpaces {
+                    // The spaces side by side while they fit; past that,
+                    // the one icon and its menu.
+                    if SpaceSwitcher.fits(browser.spaces) {
+                        SpaceSwitcher(browser: browser)
+                            .padding(.trailing, 4)
+                    } else {
+                        SpaceDot(browser: browser)
+                    }
+                }
                 ExtensionSlot(browser: browser, edge: .trailing, room: room)
                 BookmarkDoor(browser: browser, arrowEdge: .trailing)
                 // Only while a download is running, and a moment after.
@@ -933,10 +948,17 @@ private struct SideFoot: View {
     private var room: Int {
         let door: CGFloat = 26 + 2
         var kept = 2  // the puzzle and bookmarks
-        if prefs.usesSpaces { kept += 1 }
+        var spaces: CGFloat = 0
+        if prefs.usesSpaces {
+            if SpaceSwitcher.fits(browser.spaces) {
+                spaces = SpaceSwitcher.width(browser.spaces, live: browser.space) + 4 + 2
+            } else {
+                kept += 1
+            }
+        }
         if Profiles.shared.several { kept += 1 }
         if FetchDoor.shows(fetches, prefs, hanging: browser.downloadsHanging) { kept += 1 }
-        let free = prefs.sideWidth - 2 * 10 + 2 - CGFloat(kept) * door
+        let free = prefs.sideWidth - 2 * 10 + 2 - CGFloat(kept) * door - spaces
         return max(0, Int((free / door).rounded(.down)))
     }
 }
@@ -1001,7 +1023,7 @@ private struct PinSquare: View {
             } else {
                 Text(tab.pin ?? "")
                     .font(.system(size: scale * 12 / 34, weight: .medium))
-                    .foregroundStyle((live ? Palette.ink : Palette.muted).opacity(tab.asleep ? 0.45 : 1))
+                    .foregroundStyle((live ? Palette.ink : greys.quiet).opacity(tab.asleep ? 0.45 : 1))
             }
         }
         .frame(width: scale * 16 / 34, height: scale * 16 / 34)
@@ -1011,12 +1033,11 @@ private struct PinSquare: View {
                 if live {
                     // Darker than the resting squares' grey by as much as a live
                     // row is darker than the white it sits on (Drice: the live
-                    // pin barely showed among the others).
-                    RoundedRectangle(cornerRadius: scale * 9 / 34, style: .continuous)
-                        .fill(greys.pinLive)
+                    // pin barely showed among the others); on glass, lit.
+                    Lozenge(radius: scale * 10 / 34, pin: true)
                         .matchedGeometryEffect(id: "live", in: pill)
                 } else {
-                    RoundedRectangle(cornerRadius: scale * 9 / 34, style: .continuous)
+                    RoundedRectangle(cornerRadius: scale * 10 / 34, style: .continuous)
                         .fill(browser.selectedTabIDs.contains(tab.id) ? greys.wash :
                               hovering ? greys.hover : greys.tile)
                 }
@@ -1025,7 +1046,7 @@ private struct PinSquare: View {
         }
         .overlay {
             if browser.selectedTabIDs.contains(tab.id) {
-                RoundedRectangle(cornerRadius: scale * 9 / 34, style: .continuous)
+                RoundedRectangle(cornerRadius: scale * 10 / 34, style: .continuous)
                     .strokeBorder(Palette.ink.opacity(0.35), lineWidth: 1)
                     .allowsHitTesting(false)
             }
@@ -1038,7 +1059,7 @@ private struct PinSquare: View {
             }
         }
         .animation(Motion.quick, value: browser.peekFrom)
-        .contentShape(RoundedRectangle(cornerRadius: scale * 9 / 34, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: scale * 10 / 34, style: .continuous))
         .modifier(TabPress(enabled: browser.editingPin != tab.id && !browser.isPickedAmongOthers(tab), active: live, selected: $selectedOnPress) {
             browser.clearTabSelection()
             browser.select(tab)
@@ -1097,7 +1118,7 @@ private struct SideRow: View {
     var body: some View {
         let _ = Bench.count("row")
         HStack(spacing: 8) {
-            HStack(spacing: 8) {
+            HStack(spacing: 9) {
                 if editing {
                     TabAddressField(browser: browser)
                         .frame(height: 16)
@@ -1105,7 +1126,7 @@ private struct SideRow: View {
                     // The site's icon, or with Letters its letter: beside the
                     // title either way, as Settings says (#919).
                     if !tab.isBlank {
-                        Mark(icon: prefs.glyph == .icons ? tab.icon : nil, letter: tab.monogram, size: prefs.roomyTabs ? 17 : 15)
+                        Mark(icon: prefs.glyph == .icons ? tab.icon : nil, letter: tab.monogram, size: prefs.sideMark)
                     }
                     if tab.bench {
                         // A script's tab, not yours.
@@ -1134,7 +1155,7 @@ private struct SideRow: View {
                 }
                 Spacer(minLength: 0)
             }
-            .padding(.leading, 10)
+            .padding(.leading, 9)
             .padding(.trailing, status || peeking ? 0 : 10)
             .frame(height: prefs.sideRow)
             .contentShape(Rectangle())
@@ -1220,14 +1241,14 @@ private struct SideRow: View {
         .background { ground.animation(Motion.quick, value: live) }
         .overlay {
             if browser.selectedTabIDs.contains(tab.id) {
-                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                RoundedRectangle(cornerRadius: Metrics.rowRadius, style: .continuous)
                     .strokeBorder(Palette.ink.opacity(0.35), lineWidth: 1)
                     .allowsHitTesting(false)
             }
         }
         .modifier(Shake(travel: shake))
         .modifier(Give(pressed: pressed && prefs.tabsGive))
-        .contentShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: Metrics.rowRadius, style: .continuous))
         .modifier(OneClick(double: false) {
             guard interactive, !selectedOnPress, TabClick.flags.intersection([.command, .shift, .option]).isEmpty else { return }
             browser.clearTabSelection()
@@ -1261,27 +1282,27 @@ private struct SideRow: View {
     private var ground: some View {
         if live {
             ZStack(alignment: .leading) {
-                Rectangle().fill(greys.wash)
+                Lozenge()
                 if prefs.showsReading {
                     GeometryReader { geo in
                         ReadingFill(meter: tab.meter, width: geo.size.width)
                     }
+                    .clipShape(RoundedRectangle(cornerRadius: Metrics.rowRadius, style: .continuous))
                 }
             }
-            .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
             .matchedGeometryEffect(id: "live", in: pill)
         } else if browser.selectedTabIDs.contains(tab.id) {
-            RoundedRectangle(cornerRadius: 9, style: .continuous)
+            RoundedRectangle(cornerRadius: Metrics.rowRadius, style: .continuous)
                 .fill(greys.wash)
         } else if hovering {
-            RoundedRectangle(cornerRadius: 9, style: .continuous)
+            RoundedRectangle(cornerRadius: Metrics.rowRadius, style: .continuous)
                 .fill(greys.hover)
         }
     }
 
     private var colour: Color {
         if live { return Palette.ink }
-        return hovering ? Palette.ink.opacity(0.7) : Palette.muted
+        return hovering ? Palette.ink.opacity(0.7) : greys.quiet
     }
 }
 
@@ -1300,26 +1321,26 @@ struct Quiet: View {
 
     var body: some View {
         Button(action: act) {
-            HStack(spacing: 8) {
+            HStack(spacing: 9) {
                 if centred { Spacer(minLength: 0) }
                 Image(systemName: icon)
-                    .font(.system(size: 10, weight: .medium))
-                    .frame(width: 15)
+                    .font(.system(size: 11, weight: .semibold))
+                    .frame(width: 18)
                 if !title.isEmpty {
                     Text(title)
                         .font(.system(size: size))
                 }
                 Spacer(minLength: 0)
             }
-            .foregroundStyle(hovering ? Palette.ink.opacity(0.7) : Palette.faint)
-            .padding(.leading, centred ? 0 : 10)
+            .foregroundStyle(hovering ? Palette.ink.opacity(0.7) : greys.faint)
+            .padding(.leading, centred ? 0 : 9)
             .frame(height: height)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
-                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                RoundedRectangle(cornerRadius: Metrics.rowRadius, style: .continuous)
                     .fill(hovering ? greys.hover : .clear)
             )
-            .contentShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: Metrics.rowRadius, style: .continuous))
         }
         .buttonStyle(.plain)
         .onHover { hovering = $0 }
@@ -1417,14 +1438,14 @@ struct Door: View {
             if opened { opened = false } else { act() }
         } label: {
             Image(systemName: icon)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(on ? Palette.ink : (hovering ? Palette.ink.opacity(0.7) : Palette.muted))
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(on ? Palette.ink : (hovering ? Palette.ink.opacity(0.75) : greys.quiet))
                 .frame(width: 26, height: 26)
                 .background(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    RoundedRectangle(cornerRadius: 9, style: .continuous)
                         .fill(on ? greys.wash : (hovering ? greys.hover : .clear))
                 )
-                .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .contentShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
         }
         .buttonStyle(.plain)
         .simultaneousGesture(
@@ -1455,7 +1476,7 @@ struct Door: View {
 /// list the pages as they were then. This view answers the hit test only for
 /// a right-click, so every other click and the hover fall through to the
 /// button beneath.
-private struct RightClick: NSViewRepresentable {
+struct RightClick: NSViewRepresentable {
     let menu: () -> NSMenu?
 
     func makeNSView(context: Context) -> Catcher { Catcher() }

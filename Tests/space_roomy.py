@@ -6,8 +6,9 @@ Pillow). A hidden probe with the tabs in the column, Roomier tabs on and
 two spaces of a few pages; the bench films the window's corner while two
 fingers bring the second space in (`film swipe`, drawn off screen, the
 app staying hidden). The rows of the space coming in, mid-swipe, have to
-be as far apart as they are once it has landed: 38 points with Roomier
-tabs (36 and the gap), not 30.
+be as far apart as they are once it has landed: 42 points with Roomier
+tabs (40 and the gap), not 36. In a light window, whatever the Mac's own
+look: the lines are told from the ground by being darker than it.
 
 Nothing here makes, shows or brings forward a window.
 """
@@ -46,6 +47,7 @@ def main():
     try:
         sv.setup(**{"spaces": True, "sidebar": True, "sidebar.roomy": True, "start.fresh": False})
         sv.launch()
+        sv.cmd({"do": "ui", "look": "light"}); time.sleep(0.6)
         for n in ("a1", "a2", "a3"): sv.page(n)
         sv.cmd({"do": "space", "action": "new", "name": "Two"}); time.sleep(0.8)
         for n in ("b1", "b2", "b3", "b4", "b5"): sv.page(n)
@@ -55,11 +57,11 @@ def main():
         t.ok("filmed", all(files), r["frames"][:2])
         t.ok("landed in the second space", sv.cmd({"do": "space"})["current"] == "Two")
         last = pitch(files[-1], 20)
-        t.ok("landed: rows 38 points apart (roomy)", last and abs(last - 38) <= 1, last)
+        t.ok("landed: rows 42 points apart (roomy)", last and abs(last - 42) <= 1, last)
         # The frames with the new space part of the way in, the old one
         # mostly gone off to the left.
         mids = [pitch(f, 0) for f in files[1:5]]
-        t.ok("mid-swipe: the space coming in is roomy too", all(m and abs(m - 38) <= 1 for m in mids), mids)
+        t.ok("mid-swipe: the space coming in is roomy too", all(m and abs(m - 42) <= 1 for m in mids), mids)
     finally:
         t.done()
         sv.finish()

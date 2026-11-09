@@ -97,11 +97,20 @@ VERSION="$(tr -d '[:space:]' < VERSION)"
 BUILD="$(date +%Y%m%d%H%M)"
 # The oldest macOS this runs on — in the plist, and in the appcast so an
 # older Mac is not handed a build it can't open.
-MINIMUM="14.0"
+MINIMUM="26.0"
 
 # -Osize for a release: 14% less binary (5.39 → 4.65 MB) at the same speed —
 # launch 337 against 338 ms, a scroll frame 0.26 against 0.25 ms, a key typed
 # 0.41 ms either way, measured interleaved on 1.0.4 (27 Sep 2026).
+# Without Xcode, the Command Line Tools' newest SDK can ask for a compiler
+# plugin only Xcode carries: macOS 27's SwiftUI makes @State a macro, and the
+# build stops at "plugin for module 'SwiftUIMacros' not found". The tools keep
+# the SDK before it as well, which asks for none, so that one is used.
+TOOLS="$(xcode-select -p)"
+if [ -z "${SDKROOT:-}" ] && [ -d "$TOOLS/SDKs/MacOSX26.sdk" ] \
+   && ! ls "$TOOLS"/usr/lib/swift/host/plugins/*SwiftUIMacros* >/dev/null 2>&1; then
+  export SDKROOT="$TOOLS/SDKs/MacOSX26.sdk"
+fi
 SWIFTFLAGS=(-c "$CONFIG" --arch "$ARCH")
 [ "$CONFIG" = "release" ] && SWIFTFLAGS+=(-Xswiftc -Osize)
 swift build "${SWIFTFLAGS[@]}"
@@ -119,7 +128,7 @@ cp "$BINARY" "$APP/Contents/MacOS/$NAME"
 # native build system wrote sdk 27.0 from the same sources), and the app came
 # out in macOS 14's looks on every Mac. The SDK it really was built with is
 # put back; the oldest macOS stays as it is.
-SDK="$(xcrun --sdk macosx --show-sdk-version)"
+SDK="$(xcrun --sdk "${SDKROOT:-macosx}" --show-sdk-version)"
 vtool -set-build-version macos "$MINIMUM" "$SDK" -replace \
   -output "$APP/Contents/MacOS/$NAME.sdk" "$APP/Contents/MacOS/$NAME"
 mv "$APP/Contents/MacOS/$NAME.sdk" "$APP/Contents/MacOS/$NAME"
