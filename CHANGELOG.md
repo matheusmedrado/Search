@@ -17,6 +17,10 @@ in [ROADMAP.md](ROADMAP.md).
 
 ### Changed
 
+- A new look, with the tabs down a side and the page as a card. The frame around the page is frosted glass with the desktop behind it, lit by the space you are in: eight themes (Dawn, Ember, Sand, Moss, Tide, Glacier, Iris, Graphite), each space keeping its own, chosen from the space's menu under Theme or in Settings › Appearance › Theme. The tab you are on is a lit piece of that glass. A tab's line is taller and its title larger, the pinned squares are larger, and the page's card is rounder and casts more of a shadow. A site with no icon wears its letter in a colour of its own. The spaces sit side by side in a capsule at the column's foot, the one you are in lit and named; past five spaces the single icon and its menu come back. The address field and its list are glass over the page. Across the top, and edge to edge, the look is as it was.
+- Tabs show their site's icon from the start, where they showed a letter: Settings › Appearance › Tabs show still has Letters. A site with no icon of its own keeps its letter.
+- macOS 26 or later, where it was 14: the glass is the system's own.
+- Without Xcode, `./build.sh` builds with the Command Line Tools' macOS 26 SDK when the newest one asks for a compiler plugin only Xcode has.
 - Pages with many frames load quicker with an extension that declares several content scripts: the small script Search gives each extension is read once per frame, not once per script. With 1Password, a page with 20 frames read it 63 times. Thanks [@Chahine-tech](https://github.com/Chahine-tech) ([#1013](https://github.com/driceroland/Search/pull/1013))
 
 ### Added

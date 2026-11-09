@@ -103,9 +103,9 @@ private struct Lifted: View {
             .padding(.horizontal, 9)
             .frame(width: Lifted.width, height: Lifted.line, alignment: .leading)
             .background(Palette.ground)
-            .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: Metrics.rowRadius, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                RoundedRectangle(cornerRadius: Metrics.rowRadius, style: .continuous)
                     .strokeBorder(Palette.hairline, lineWidth: 1)
             }
             .shadow(color: .black.opacity(0.18), radius: 12, y: 4)

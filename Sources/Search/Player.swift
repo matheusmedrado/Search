@@ -117,14 +117,14 @@ struct PlayerRow: View {
         .frame(height: prefs.sideRow)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 9, style: .continuous)
+            RoundedRectangle(cornerRadius: Metrics.rowRadius, style: .continuous)
                 .fill(hovering ? greys.hover : .clear)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 9, style: .continuous)
+            RoundedRectangle(cornerRadius: Metrics.rowRadius, style: .continuous)
                 .strokeBorder(Palette.hairline, lineWidth: 1)
         )
-        .contentShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: Metrics.rowRadius, style: .continuous))
         // The buttons take their own clicks; the rest of the row is the way
         // to the tab.
         .onTapGesture { browser.select(tab) }

@@ -656,10 +656,29 @@ final class Favicons {
 /// What stands for a page when there is no room for its title: the site's
 /// icon if there is one, and a letter in a faint square until there is.
 struct Mark: View {
+    @Environment(\.colorScheme) private var scheme
     let icon: NSImage?
     let letter: String
     var size: CGFloat = 16
     var dim = false
+
+    /// The letter's own colours: a pale square and a deeper letter of one
+    /// hue, taken from the letter, so that a column of sites without icons
+    /// is told apart at a glance rather than read as one grey square after
+    /// another. Every letter keeps its hue from one day to the next.
+    private static func tint(_ letter: String, dark: Bool) -> (ground: Color, ink: Color) {
+        let sum = letter.unicodeScalars.reduce(0) { $0 &+ Int($1.value) }
+        let key = (sum &* 47) % 360 * 2 + (dark ? 1 : 0)
+        if let kept = tints[key] { return kept }
+        let hue = Double(key / 2)
+        let made = dark
+            ? (Theme.oklch(0.37, 0.07, hue), Theme.oklch(0.9, 0.1, hue))
+            : (Theme.oklch(0.925, 0.05, hue), Theme.oklch(0.44, 0.13, hue))
+        tints[key] = made
+        return made
+    }
+
+    private static var tints: [Int: (ground: Color, ink: Color)] = [:]
 
     var body: some View {
         Group {
@@ -680,13 +699,14 @@ struct Mark: View {
                     .frame(width: size, height: size)
                     .clipShape(RoundedRectangle(cornerRadius: size * 0.22, style: .continuous))
             } else {
+                let tint = Mark.tint(letter, dark: scheme == .dark)
                 Text(letter)
-                    .font(.system(size: size * 0.56, weight: .medium))
-                    .foregroundStyle(Palette.muted)
+                    .font(.system(size: size * 0.58, weight: .semibold))
+                    .foregroundStyle(tint.ink)
                     .frame(width: size, height: size)
                     .background(
-                        RoundedRectangle(cornerRadius: size * 0.22, style: .continuous)
-                            .fill(Palette.ink.opacity(0.06))
+                        RoundedRectangle(cornerRadius: size * 0.3, style: .continuous)
+                            .fill(tint.ground)
                     )
             }
         }

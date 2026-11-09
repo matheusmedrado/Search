@@ -29,7 +29,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import split_view as sv  # noqa: E402
 
 sv.use("side-panel")
-GAP = 8
+GAP = 10
 WIDTH = 380
 # The panel's own line above its page: the extension's name and a close button.
 HEAD = 43

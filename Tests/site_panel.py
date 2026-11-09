@@ -38,7 +38,7 @@ threading.Thread(target=slow.serve_forever, daemon=True).start()
 SLOW = f"http://localhost:{slow.server_port}/slow"
 
 sv.use("bld-s107-sitepanel")
-GAP = 8
+GAP = 10
 WIDTH = 380
 
 

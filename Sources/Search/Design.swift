@@ -25,11 +25,11 @@ enum Palette {
     /// bookmarks bar and the gaps share it, a touch off the page's white, so
     /// the card reads as one (see CardEdge).
     static let frame = Color(nsColor: NS.frame)
-    /// The column's own greys, on that ground: the live tab, the one under the
-    /// pointer, the resting pin squares and the live pin. The white column's
-    /// wash, hover and pinLive all but vanished on it (Drice: the pins' squares
-    /// and the open tab no longer showed), so these keep the same steps of
-    /// contrast from the frame that those kept from the white.
+    /// The column's own tones, on that ground: the live tab, the one under
+    /// the pointer, the resting pin squares and the live pin. The frame is
+    /// glass with a space's light in it (see Glass.swift), and a grey laid on
+    /// that would be a patch of fog whatever the light; these are veils of
+    /// white instead, so each takes the colour of what is under it.
     static let sideWash = Color(nsColor: NS.sideWash)
     static let sideHover = Color(nsColor: NS.sideHover)
     static let sideTile = Color(nsColor: NS.sideTile)
@@ -51,10 +51,13 @@ enum Palette {
         static let pinLive = pair(0.90, 0.21)
         static let hover = pair(0.965, 0.15)
         static let frame = pair(0.955, 0.075)
-        static let sideWash = pair(0.895, 0.155)
-        static let sideHover = pair(0.915, 0.13)
-        static let sideTile = pair(0.925, 0.115)
-        static let sidePinLive = pair(0.86, 0.19)
+        static let sideWash = veil(0.76, 0.15)
+        // Hover sits between the resting tile and the live tab: a pin under
+        // the pointer has to differ from the same pin at rest, which these
+        // were once (as plain greys) and, for a while, were not.
+        static let sideHover = veil(0.52, 0.11)
+        static let sideTile = veil(0.36, 0.075)
+        static let sidePinLive = veil(0.76, 0.15)
         /// The resting traffic lights, drawn by hand when the app is behind.
         static let resting = pair(0.80, 0.30)
         static let safe = tint(light: (0.08, 0.50, 0.24), dark: (0.29, 0.87, 0.50))
@@ -64,6 +67,14 @@ enum Palette {
             NSColor(name: nil) { appearance in
                 let c = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua ? dark : light
                 return NSColor(srgbRed: c.0, green: c.1, blue: c.2, alpha: 1)
+            }
+        }
+
+        /// White, this much of it, in a light window and in a dark one.
+        private static func veil(_ light: CGFloat, _ dark: CGFloat) -> NSColor {
+            NSColor(name: nil) { appearance in
+                let dim = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+                return NSColor(white: 1, alpha: dim ? dark : light)
             }
         }
 
@@ -86,11 +97,19 @@ struct Greys {
     let hover: Color
     let tile: Color
     let pinLive: Color
+    /// On the frame's glass: the live tab is a lit piece of it (see Lozenge).
+    var glass = false
+    /// A title that isn't the live one, and what is fainter still (the row
+    /// that makes a tab). On glass they are ink thinned rather than a grey:
+    /// a fixed grey reads on one space's light and sinks into another's.
+    var quiet = Palette.muted
+    var faint = Palette.faint
 
     static let white = Greys(wash: Palette.wash, hover: Palette.hover,
                              tile: Palette.wash.opacity(0.55), pinLive: Palette.pinLive)
     static let frame = Greys(wash: Palette.sideWash, hover: Palette.sideHover,
-                             tile: Palette.sideTile, pinLive: Palette.sidePinLive)
+                             tile: Palette.sideTile, pinLive: Palette.sidePinLive, glass: true,
+                             quiet: Palette.ink.opacity(0.62), faint: Palette.ink.opacity(0.38))
 }
 
 private struct GreysKey: EnvironmentKey {
@@ -154,8 +173,11 @@ enum Metrics {
     /// With the tabs down the side the page is a card: this far from the
     /// window's edges (and from the column, folded away), and its corners
     /// this round.
-    static let cardGap: CGFloat = 8
-    static let cardRadius: CGFloat = 10
+    static let cardGap: CGFloat = 10
+    static let cardRadius: CGFloat = 16
+    /// A tab's line in the column, a row that is an action, a heading: all
+    /// the same roundness, and a pin's square a little more for its size.
+    static let rowRadius: CGFloat = 11
     /// Where the first tab starts. The traffic lights run from 19 to 79 —
     /// measured, not guessed — so this leaves them the same air on their right
     /// that the window gives them on their left.
@@ -194,7 +216,7 @@ enum Metrics {
     /// The address field, in both the places it shows up.
     static let fieldWidth: CGFloat = 560
     /// The column of titles down the left, in the way that has one.
-    static let side: CGFloat = 232
+    static let side: CGFloat = 244
     static let sideMin: CGFloat = 176
     static let sideMax: CGFloat = 440
 }
@@ -455,7 +477,7 @@ struct CardEdge: ViewModifier {
             .background {
                 CardShape(on: on)
                     .fill(on ? Palette.ground : .clear)
-                    .shadow(color: .black.opacity(on ? CardEdge.shadow : 0), radius: 6, y: 1)
+                    .shadow(color: .black.opacity(on ? CardEdge.shadow : 0), radius: CardEdge.blur, y: CardEdge.drop)
             }
             .overlay {
                 CardShape(on: on)
@@ -465,8 +487,12 @@ struct CardEdge: ViewModifier {
     }
 
     /// How dark the shadow and the edge are, for the stage's own cards too.
-    static let shadow: Double = 0.07
-    static let edge: Double = 0.08
+    /// A sheet held a little above the glass, not a panel set into it: the
+    /// shadow is wide and soft and falls below.
+    static let shadow: Double = 0.16
+    static let blur: CGFloat = 14
+    static let drop: CGFloat = 5
+    static let edge: Double = 0.10
 }
 
 /// The card's outline: round at its corners, or, off, a rectangle reaching

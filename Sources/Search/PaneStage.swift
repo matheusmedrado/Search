@@ -322,8 +322,8 @@ final class PaneStage: NSView {
                 shadow.cornerCurve = .continuous
                 shadow.shadowColor = NSColor.black.cgColor
                 shadow.shadowOpacity = Swift.Float(CardEdge.shadow)
-                shadow.shadowRadius = 6
-                shadow.shadowOffset = CGSize(width: 0, height: 1)
+                shadow.shadowRadius = CardEdge.blur
+                shadow.shadowOffset = CGSize(width: 0, height: CardEdge.drop)
             }
         }
     }

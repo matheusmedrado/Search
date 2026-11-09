@@ -98,7 +98,7 @@ struct PinGhost: View {
     private var scale: CGFloat { min(width, height) }
 
     var body: some View {
-        let shape = RoundedRectangle(cornerRadius: scale * 9 / 34, style: .continuous)
+        let shape = RoundedRectangle(cornerRadius: scale * 10 / 34, style: .continuous)
         shape
             .fill(greys.hover)
             .overlay { shape.strokeBorder(Palette.ink.opacity(0.16), lineWidth: 1) }
@@ -121,7 +121,7 @@ struct RowGhost: View {
     let size: CGFloat
 
     var body: some View {
-        let shape = RoundedRectangle(cornerRadius: 9, style: .continuous)
+        let shape = RoundedRectangle(cornerRadius: Metrics.rowRadius, style: .continuous)
         HStack(spacing: 8) {
             Mark(icon: tab.icon, letter: tab.monogram, size: 15)
             Text(tab.label)

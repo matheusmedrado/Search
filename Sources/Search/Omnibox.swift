@@ -56,6 +56,10 @@ struct Omnibox: View {
         .allowsHitTesting(browser.fieldShowing)
     }
 
+    /// The field's corners and the list's; a row in the list is rounded to
+    /// sit inside them.
+    static let corner: CGFloat = 20
+
     private func content(width: CGFloat) -> some View {
         ZStack {
             // Keep the container mounted: only the field scales, while the
@@ -63,8 +67,10 @@ struct Omnibox: View {
             if browser.fieldShowing {
                 if over {
                     // The page is still there, just out of the way.
+                    // Thinly: the field is glass, and glass over a blank
+                    // sheet is only a sheet.
                     Rectangle()
-                        .fill(Palette.ground.opacity(0.74))
+                        .fill(Palette.ground.opacity(0.38))
                         .ignoresSafeArea(.all, edges: fitted ? [] : .all)
                         .onTapGesture { browser.dismiss() }
                         .transition(.opacity)
@@ -122,19 +128,16 @@ struct Omnibox: View {
                     // an app.
                     Breath()
 
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(Palette.ground)
+                    // Glass, with the page under it (see Glass.swift): its
+                    // edge and its shadow are the glass's own.
+                    Color.clear.glassPanel(radius: Omnibox.corner)
                 }
             }
             .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .strokeBorder(
-                        refused ? Color.red.opacity(0.35) : Palette.hairline,
-                        lineWidth: 1
-                    )
+                RoundedRectangle(cornerRadius: Omnibox.corner, style: .continuous)
+                    .strokeBorder(refused ? Color.red.opacity(0.35) : .clear, lineWidth: 1)
                     .allowsHitTesting(false)
             )
-            .shadow(color: .black.opacity(0.06), radius: 24, y: 8)
             .modifier(Shake(travel: shake))
             .onAppear {
                 shake = 0
@@ -179,12 +182,7 @@ struct Omnibox: View {
             }
         }
         .padding(6)
-        .background(Palette.ground, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(Palette.hairline, lineWidth: 1)
-        )
-        .shadow(color: .black.opacity(0.07), radius: 20, y: 6)
+        .background { Color.clear.glassPanel(radius: Omnibox.corner) }
         .transition(.scale(scale: 0.98, anchor: .top).combined(with: .opacity))
     }
 
@@ -254,12 +252,14 @@ struct Omnibox: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 9)
             .background {
+                // Ink thinned, not a grey: the list is glass, and takes
+                // what is under it.
                 if picked {
-                    RoundedRectangle(cornerRadius: 9, style: .continuous)
-                        .fill(Palette.wash)
+                    RoundedRectangle(cornerRadius: Omnibox.corner - 6, style: .continuous)
+                        .fill(Palette.ink.opacity(0.09))
                 } else if hovering {
-                    RoundedRectangle(cornerRadius: 9, style: .continuous)
-                        .fill(Palette.hover)
+                    RoundedRectangle(cornerRadius: Omnibox.corner - 6, style: .continuous)
+                        .fill(Palette.ink.opacity(0.05))
                 }
             }
             .onHover { hovering = $0 }

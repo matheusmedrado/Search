@@ -57,7 +57,7 @@ struct BookmarksBar: View {
                 withAnimation(Motion.glide) { browser.prefs.bookmarksBar = false }
             }
         }
-        .background(onFrame ? Palette.frame : Palette.ground)
+        .background(onFrame ? Color.clear : Palette.ground)
         .overlay(alignment: .bottom) {
             if !onFrame { Rectangle().fill(Palette.hairline).frame(height: 1) }
         }

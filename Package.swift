@@ -1,9 +1,11 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.2
 import PackageDescription
 
 let package = Package(
     name: "Search",
-    platforms: [.macOS(.v14)],
+    // macOS 26 and later: the frame is glass (see Glass.swift), and the
+    // glass is Apple's, which is not there before 26.
+    platforms: [.macOS(.v26)],
     targets: [
         .executableTarget(
             name: "Search",
